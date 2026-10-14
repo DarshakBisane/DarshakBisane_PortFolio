@@ -1,139 +1,157 @@
-import { Brain, Code, Cpu, Database, Server, Terminal } from 'lucide-react'
+import { Brain, Code, Database, Globe, Terminal } from 'lucide-react'
+import {
+  CppIcon,
+  CssIcon,
+  DockerIcon,
+  FastApiIcon,
+  GithubIcon,
+  GitIcon,
+  HtmlIcon,
+  JavaIcon,
+  JavaScriptIcon,
+  KubernetesIcon,
+  LlmIcon,
+  MachineLearningIcon,
+  MatplotlibIcon,
+  NeonIcon,
+  NlpIcon,
+  NumpyIcon,
+  PandasIcon,
+  PostgresIcon,
+  PydanticIcon,
+  PythonIcon,
+  RagIcon,
+  RedisIcon,
+  RenderIcon,
+  ScikitLearnIcon,
+  SqlIcon,
+  VercelIcon,
+} from '../icons/TechIcons'
 import './sections.css'
 
 export default function SkillsSection() {
-  const skillCategories = [
+  const topCategories = [
     {
+      id: 'prog',
       title: 'Programming Languages',
       icon: Code,
+      className: 'card-prog',
       skills: [
-        { name: 'Python', level: 'Primary', exp: 'Research, model engineering & production APIs' },
-        { name: 'C++', level: 'Proficient', exp: 'Algorithms, low-level optimization & SIMD' },
-        { name: 'TypeScript', level: 'Proficient', exp: 'Modern typed frontend & full-stack development' },
-        { name: 'JavaScript', level: 'Proficient', exp: 'ES6+, DOM architecture & asynchronous runtimes' },
-        { name: 'SQL', level: 'Proficient', exp: 'Complex queries, schema design & query indexing' },
-        { name: 'Bash / Shell', level: 'Comfortable', exp: 'Automation scripts, Linux workflows & CLI tools' },
+        { name: 'Java', icon: JavaIcon },
+        { name: 'Python', icon: PythonIcon },
+        { name: 'JavaScript', icon: JavaScriptIcon },
+        { name: 'C++', icon: CppIcon },
+        { name: 'SQL', icon: SqlIcon },
       ],
     },
     {
-      title: 'Machine Learning & AI',
-      icon: Brain,
-      skills: [
-        { name: 'PyTorch', level: 'Primary', exp: 'Model development, autograd & fine-tuning' },
-        { name: 'TensorFlow / Keras', level: 'Proficient', exp: 'Model pipelines & legacy architectures' },
-        { name: 'Hugging Face', level: 'Advanced', exp: 'Transformers, PEFT, LoRA & tokenization' },
-        { name: 'Scikit-Learn', level: 'Advanced', exp: 'Supervised/unsupervised algorithms & feature pipelines' },
-        { name: 'OpenCV', level: 'Proficient', exp: 'Computer vision preprocessing & spatial filtering' },
-        { name: 'LangChain & RAG', level: 'Proficient', exp: 'Vector search indexing & agentic workflows' },
-      ],
-    },
-    {
-      title: 'Backend & Systems',
-      icon: Server,
-      skills: [
-        { name: 'FastAPI', level: 'Advanced', exp: 'High-throughput asynchronous ML API services' },
-        { name: 'React.js', level: 'Proficient', exp: 'Component architecture, state & modern hooks' },
-        { name: 'Node.js / Express', level: 'Proficient', exp: 'REST APIs, middleware & microservices' },
-        { name: 'Next.js', level: 'Proficient', exp: 'SSR/SSG, App Router & modern web architecture' },
-        { name: 'Flask', level: 'Proficient', exp: 'Microservices & rapid algorithmic prototyping' },
-      ],
-    },
-    {
-      title: 'Data & DevOps Tools',
+      id: 'db',
+      title: 'Databases & Data Handling',
       icon: Database,
+      className: 'card-db',
       skills: [
-        { name: 'PostgreSQL', level: 'Proficient', exp: 'Relational data modeling & ACID transactions' },
-        { name: 'Redis', level: 'Proficient', exp: 'In-memory caching, message queuing & rate limiting' },
-        { name: 'Docker', level: 'Proficient', exp: 'Containerization & multi-stage build workflows' },
-        { name: 'Git & GitHub', level: 'Advanced', exp: 'Version control, CI/CD actions & pull requests' },
-        { name: 'Linux / Unix', level: 'Advanced', exp: 'Environment config, server administration & profiling' },
+        { name: 'PostgreSQL', icon: PostgresIcon },
+        { name: 'Neon', icon: NeonIcon },
+        { name: 'NumPy', icon: NumpyIcon },
+        { name: 'pandas', icon: PandasIcon },
+      ],
+    },
+    {
+      id: 'web',
+      title: 'Web Technologies',
+      icon: Globe,
+      className: 'card-web',
+      skills: [
+        { name: 'HTML', icon: HtmlIcon },
+        { name: 'CSS', icon: CssIcon },
       ],
     },
   ]
 
+  const bottomCategories = [
+    {
+      id: 'ml',
+      title: 'Machine Learning, AI & Data Science',
+      icon: Brain,
+      className: 'card-ml',
+      skills: [
+        { name: 'Machine Learning', icon: MachineLearningIcon },
+        { name: 'scikit-learn', icon: ScikitLearnIcon },
+        { name: 'Matplotlib', icon: MatplotlibIcon },
+        { name: 'FastAPI', icon: FastApiIcon },
+        { name: 'Pydantic', icon: PydanticIcon },
+        { name: 'RAG', icon: RagIcon, learning: true },
+        { name: 'NLP', icon: NlpIcon, learning: true },
+        { name: 'LLMs', icon: LlmIcon, learning: true },
+      ],
+    },
+    {
+      id: 'tools',
+      title: 'Tools, Platforms & Deployment',
+      icon: Terminal,
+      className: 'card-tools',
+      skills: [
+        { name: 'Git', icon: GitIcon },
+        { name: 'GitHub', icon: GithubIcon },
+        { name: 'Vercel', icon: VercelIcon },
+        { name: 'Render', icon: RenderIcon },
+        { name: 'Redis', icon: RedisIcon },
+        { name: 'Docker', icon: DockerIcon },
+        { name: 'Kubernetes', icon: KubernetesIcon, learning: true },
+      ],
+    },
+  ]
+
+  const renderCategoryCard = (category) => {
+    const CategoryIcon = category.icon
+    return (
+      <div key={category.id} className={`skills-category-card ${category.className}`}>
+        <div className="skills-category-header">
+          <div className="skills-category-icon-frame" aria-hidden="true">
+            <CategoryIcon size={14} />
+          </div>
+          <h3 className="skills-category-title">{category.title}</h3>
+        </div>
+
+        <div className={`skills-items-grid ${category.skills.length > 5 ? 'expanded-grid' : ''}`}>
+          {category.skills.map((skill) => {
+            const SkillIcon = skill.icon
+            return (
+              <div key={skill.name} className="skill-item" title={skill.name}>
+                <div className="skill-item-main">
+                  <span className="skill-icon-wrapper" aria-hidden="true">
+                    <SkillIcon size={16} />
+                  </span>
+                  <span className="skill-name">{skill.name}</span>
+                </div>
+                {skill.learning && (
+                  <span className="skill-badge-learning">Learning</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="section-wrapper animate-content">
+    <div className="section-wrapper animate-content" style={{ width: '100%' }}>
       {/* Centered Editorial Heading */}
-      <div className="editorial-section-header">
+      <div className="editorial-section-header" style={{ marginBottom: '1.5rem' }}>
         <h2 className="editorial-heading">Skills</h2>
       </div>
 
-      <div className="cards-grid-2">
-        {skillCategories.map((cat, idx) => {
-          const Icon = cat.icon
-          return (
-            <div key={idx} className="liquid-glass-card">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.65rem',
-                  marginBottom: '1.25rem',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                  paddingBottom: '0.75rem',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-white)',
-                  }}
-                >
-                  <Icon size={16} />
-                </div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 500, color: 'var(--text-white)' }}>
-                  {cat.title}
-                </h3>
-              </div>
+      <div className="skills-inventory-container">
+        {/* Top Row: Programming Languages, Databases & Data Handling, Web Technologies */}
+        <div className="skills-grid-top">
+          {topCategories.map(renderCategoryCard)}
+        </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-                {cat.skills.map((skill, sIdx) => (
-                  <div
-                    key={sIdx}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.2rem',
-                      padding: '0.5rem 0.65rem',
-                      borderRadius: '6px',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.88rem', fontWeight: 500, color: 'var(--text-white)' }}>
-                        {skill.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '0.7rem',
-                          fontFamily: 'var(--font-mono)',
-                          color: skill.level === 'Primary' || skill.level === 'Advanced' ? '#ffffff' : 'var(--text-midgrey)',
-                          background: skill.level === 'Primary' || skill.level === 'Advanced' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        {skill.level}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-midgrey)' }}>
-                      {skill.exp}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
+        {/* Bottom Row: Machine Learning, AI & Data Science, Tools, Platforms & Deployment */}
+        <div className="skills-grid-bottom">
+          {bottomCategories.map(renderCategoryCard)}
+        </div>
       </div>
     </div>
   )
