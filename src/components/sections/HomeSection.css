@@ -1,0 +1,227 @@
+/* ==========================================================================
+   Home Hero Section Styles - Split-Text Animation & Viewport Balanced
+   Full-Width with 25px Horizontal Padding & Dominant Oversized Typography
+   ========================================================================== */
+
+.home-hero-viewport {
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: calc(var(--navbar-height) + 0.5rem) 25px 1.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Connected Typographic Cluster: Role positioned close to top with minimal gap to Name */
+.home-title-cluster {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.25rem;
+  margin-bottom: auto;
+  box-sizing: border-box;
+}
+
+/* Role Label: text only, 12-14px, subtle neutral grey, directly above name */
+.home-role-label {
+  font-family: var(--font-sans);
+  font-size: clamp(0.78rem, 1vw, 0.88rem);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-midgrey);
+  margin-top: 0;
+  margin-bottom: 0.2rem;
+  line-height: 1;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+/* Center: Single-Line Colossal Oversized Name Across Full Window */
+.home-name-container {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.home-hero-name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-family: var(--font-editorial);
+  font-size: clamp(3.25rem, 11.2vw, 12.5rem);
+  font-weight: 200;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--text-white);
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.split-word {
+  display: inline-block;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+.split-word-space {
+  display: inline-block;
+}
+
+/* Supporting Group: Description & Actions */
+.home-supporting-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 640px;
+  width: 100%;
+  margin-bottom: 1.25rem;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.home-hero-desc {
+  font-family: var(--font-sans);
+  font-size: clamp(0.92rem, 1.25vw, 1.05rem);
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--text-lightgrey);
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.home-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.hero-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: none;
+  color: var(--text-white);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  position: relative;
+  transition: opacity 0.2s ease;
+}
+
+.hero-text-link:hover {
+  opacity: 0.75;
+}
+
+.hero-text-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background-color 0.2s ease;
+}
+
+.hero-text-link:hover::after {
+  background: #ffffff;
+}
+
+.link-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.hero-text-link:hover .link-arrow {
+  transform: translateX(3px);
+}
+
+.hero-action-divider {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
+}
+
+/* Bottom: Visible SCROLL TO EXPLORE Indicator */
+.home-scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-midgrey);
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+  will-change: opacity;
+}
+
+.home-scroll-hint:hover {
+  color: var(--text-white);
+}
+
+.scroll-hint-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.scroll-hint-icon {
+  animation: bounceIndicator 2s infinite ease-in-out;
+}
+
+@keyframes bounceIndicator {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* Responsive Scaling */
+@media (max-width: 768px) {
+  .home-hero-viewport {
+    padding-top: calc(var(--navbar-height) + 0.75rem);
+    padding-bottom: 1.25rem;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .home-hero-name {
+    font-size: clamp(2.6rem, 11vw, 4.5rem);
+  }
+
+  .home-hero-desc {
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+  }
+
+  .home-hero-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}

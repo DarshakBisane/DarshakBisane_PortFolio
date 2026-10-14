@@ -1,0 +1,209 @@
+/* ==========================================================================
+   Transparent & Integrated Navbar Styles
+   ========================================================================== */
+
+.site-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--navbar-height);
+  z-index: 50;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  pointer-events: none; /* Let background cursor ring trail through transparent areas */
+}
+
+.navbar-inner {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 25px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: auto; /* Re-enable pointer events for links */
+}
+
+/* Personal Wordmark (Left) */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.2s ease;
+}
+
+.navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.brand-wordmark {
+  font-family: var(--font-editorial);
+  font-size: 0.88rem;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+/* Desktop Navigation Links (Right) */
+.navbar-nav-desktop {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links-list {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-text-btn {
+  position: relative;
+  display: inline-block;
+  padding: 0.35rem 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: #8e8e93;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-text-btn:hover {
+  color: #ffffff;
+}
+
+/* 
+   SELECTED NAVIGATION ITEM:
+   Strictly white text + thin underline directly beneath text only.
+   No boxes, no pills, no borders, no cards.
+*/
+.nav-text-btn.is-active {
+  color: #ffffff;
+}
+
+.nav-text-btn.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background-color: #ffffff;
+  border-radius: 1px;
+}
+
+/* Mobile Toggle Button */
+.navbar-mobile-toggle {
+  display: none;
+}
+
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: #ffffff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Mobile Nav Drawer */
+.mobile-nav-drawer {
+  position: fixed;
+  top: var(--navbar-height);
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1rem 2rem 1.5rem;
+  pointer-events: auto;
+  animation: fadeInDown 0.2s ease forwards;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mobile-nav-btn {
+  position: relative;
+  text-align: left;
+  padding: 0.4rem 0;
+  background: transparent;
+  border: none;
+  color: #8e8e93;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  width: fit-content;
+}
+
+.mobile-nav-btn:hover,
+.mobile-nav-btn.is-active {
+  color: #ffffff;
+}
+
+.mobile-nav-btn.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background-color: #ffffff;
+}
+
+/* Responsive Breakpoint */
+@media (max-width: 960px) {
+  .navbar-nav-desktop {
+    display: none;
+  }
+  .navbar-mobile-toggle {
+    display: block;
+  }
+  .navbar-inner {
+    padding: 0 1.25rem;
+  }
+}

@@ -1,0 +1,318 @@
+/* ==========================================================================
+   Shared Section Layout & Liquid Glass UI (Pure Monochrome)
+   Full-Width Layout: 100% width with 25px horizontal padding
+   ========================================================================== */
+
+.portfolio-section {
+  width: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  padding: calc(var(--navbar-height) + 1.5rem) 25px 2.5rem;
+  box-sizing: border-box;
+  scroll-snap-align: start;
+  overflow-x: clip;
+}
+
+.section-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Centered Editorial Section Heading System
+   ========================================================================== */
+
+.editorial-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.editorial-heading {
+  font-family: var(--font-editorial);
+  font-size: clamp(2.75rem, 6.5vw, 5rem);
+  font-weight: 200;
+  letter-spacing: -0.03em;
+  color: var(--text-white);
+  line-height: 1.1;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.editorial-subheading {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  font-weight: 300;
+  color: var(--text-midgrey);
+  max-width: 800px;
+  line-height: 1.6;
+  text-align: center;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   Liquid Glass Cards & Panels
+   ========================================================================== */
+
+.liquid-glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--glass-radius);
+  padding: 1.75rem;
+  box-sizing: border-box;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              background-color 0.25s ease,
+              box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass-card:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18), 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* Liquid Glass Chips & Tech Badges (Pure Monochrome) */
+.glass-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-lightgrey);
+  transition: all 0.2s ease;
+}
+
+.glass-chip:hover {
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.glass-chip.accent {
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Action Buttons (Monochrome Minimalist) */
+.btn-glass-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #000000;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-glass-primary:hover {
+  background: #e5e5e7;
+  transform: translateY(-1px);
+}
+
+.btn-glass-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--text-white);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-glass-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Editorial Prose Layout (About Section - Full-Width & Scroll Animated)
+   ========================================================================== */
+
+/* Profile Photo & Name Cluster (Centered beneath heading) */
+.about-profile-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.about-profile-image-frame {
+  width: clamp(120px, 11vw, 150px);
+  height: clamp(120px, 11vw, 150px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.15), 0 8px 30px rgba(0, 0, 0, 0.8);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-profile-image-frame:hover {
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.3), 0 8px 30px rgba(0, 0, 0, 0.9);
+}
+
+.about-profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 69% 43%;
+  display: block;
+}
+
+.about-profile-name {
+  font-family: var(--font-editorial);
+  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  color: var(--text-white);
+  margin: 0;
+  text-align: center;
+}
+
+.about-editorial-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 2vw, 2.25rem);
+  box-sizing: border-box;
+}
+
+.about-paragraph-wrapper {
+  width: 100%;
+  box-sizing: border-box;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+.about-paragraph {
+  font-family: var(--font-sans);
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--text-lightgrey);
+  margin: 0;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.about-paragraph strong {
+  font-weight: 400;
+  color: var(--text-white);
+}
+
+/* Full-Width Grids */
+.cards-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.cards-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Timeline Layout for Experience / Education (Full-Width) */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.timeline-bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.timeline-bullet-item {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.88rem;
+  color: var(--text-lightgrey);
+  line-height: 1.6;
+  text-align: left;
+}
+
+.timeline-bullet-item::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--text-midgrey);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .cards-grid-2, .cards-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .portfolio-section {
+    padding: calc(var(--navbar-height) + 1.25rem) 20px 2rem;
+  }
+
+  .editorial-heading {
+    font-size: 2.5rem;
+  }
+}
