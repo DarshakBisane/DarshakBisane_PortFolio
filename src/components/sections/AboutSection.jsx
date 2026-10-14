@@ -84,7 +84,7 @@ export default function AboutSection() {
             loading="eager"
           />
         </div>
-        <h3 className="about-profile-name">Darshak Bisane</h3>
+        <h3 className="about-profile-name">Darshak K. Bisane</h3>
       </div>
 
       {/* 4 & 5. Exactly Two Full-Width Editorial Paragraphs that exit in opposite directions */}
