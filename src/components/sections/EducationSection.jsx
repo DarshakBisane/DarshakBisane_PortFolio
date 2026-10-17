@@ -102,17 +102,17 @@ export default function EducationSection({ onNavigateNext, onNavigatePrev }) {
         </div>
 
         {/* Side-Positioned Navigation Controls: Previous Section (Left) & Next Section (Right) */}
-        <div className="education-side-nav-bar">
+        <div className="education-side-nav-bar" role="navigation" aria-label="Education section transitions">
           {/* Left: Previous Section Return Control (Navigates to About Me) */}
           <button
             type="button"
             className="btn-edu-side btn-edu-prev"
             onClick={onNavigatePrev}
-            aria-label="Previous Section: About Me"
+            aria-label="Return to About Me section"
             id="education-prev-btn"
           >
             <span className="edu-arrow edu-arrow-prev" aria-hidden="true">←</span>
-            <span>Previous Section</span>
+            <span>About Me</span>
           </button>
 
           {/* Right: Next Section Advance Control (Navigates to Skills) */}
@@ -120,10 +120,10 @@ export default function EducationSection({ onNavigateNext, onNavigatePrev }) {
             type="button"
             className="btn-edu-side btn-edu-next"
             onClick={onNavigateNext}
-            aria-label="Next Section: Skills"
+            aria-label="Continue to Skills section"
             id="education-next-btn"
           >
-            <span>Next Section</span>
+            <span>Continue to Skills</span>
             <span className="edu-arrow edu-arrow-next" aria-hidden="true">→</span>
           </button>
         </div>

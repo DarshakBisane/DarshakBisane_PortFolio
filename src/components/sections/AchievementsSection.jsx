@@ -10,7 +10,8 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Modal from '../Modal'
 import kdkCertImg from '../../assets/KDK hackathon.webp'
 import priyadarshiniCertImg from '../../assets/Priyadarshini Hackathon.webp'
 import './sections.css'
@@ -166,29 +167,6 @@ export default function AchievementsSection() {
     setIsCertZoomed(false)
   }
 
-  // Accessibility and Escape listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setSelectedDetails(null)
-        setActiveCertificate(null)
-        setIsCertZoomed(false)
-      }
-    }
-
-    if (selectedDetails || activeCertificate) {
-      document.body.style.overflow = 'hidden'
-      window.addEventListener('keydown', handleKeyDown)
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [selectedDetails, activeCertificate])
-
   return (
     <div className="section-wrapper animate-content" style={{ width: '100%' }}>
       {/* Centered Editorial Heading */}
@@ -268,20 +246,15 @@ export default function AchievementsSection() {
         })}
       </div>
 
-      {/* Details Modal */}
-      {selectedDetails && (
-        <div
-          className="project-modal-backdrop"
-          onClick={() => setSelectedDetails(null)}
-          role="presentation"
-        >
-          <div
-            className="project-modal-dialog achievement-modal-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ach-modal-title"
-          >
+      {/* Details Modal — Standardized Full-Screen Pure Black Modal */}
+      <Modal
+        isOpen={!!selectedDetails}
+        onClose={() => setSelectedDetails(null)}
+        titleId="ach-modal-title"
+        className="project-modal-dialog achievement-modal-dialog"
+      >
+        {selectedDetails && (
+          <>
             {/* Header */}
             <div className="project-modal-header">
               <div>
@@ -302,7 +275,7 @@ export default function AchievementsSection() {
                 onClick={() => setSelectedDetails(null)}
                 aria-label="Close details dialog"
               >
-                <X size={18} />
+                <X size={20} color="#ffffff" strokeWidth={2.2} />
               </button>
             </div>
 
@@ -458,24 +431,21 @@ export default function AchievementsSection() {
                 </>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
-      {/* Certificate Viewer Modal */}
-      {activeCertificate && (
-        <div
-          className="project-modal-backdrop certificate-viewer-backdrop"
-          onClick={handleCloseCertificate}
-          role="presentation"
-        >
-          <div
-            className="certificate-modal-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="ach-cert-modal-title"
-          >
+      {/* Certificate Viewer Modal — Standardized Full-Screen Pure Black Modal */}
+      <Modal
+        isOpen={!!activeCertificate}
+        onClose={handleCloseCertificate}
+        titleId="ach-cert-modal-title"
+        backdropClassName="certificate-viewer-backdrop"
+        className="certificate-modal-dialog"
+        closeOnBackdropClick={true}
+      >
+        {activeCertificate && (
+          <>
             {/* Header */}
             <div className="certificate-modal-header">
               <div>
@@ -490,20 +460,26 @@ export default function AchievementsSection() {
                 <button
                   type="button"
                   className={`certificate-zoom-btn ${isCertZoomed ? 'active' : ''}`}
-                  onClick={() => setIsCertZoomed((prev) => !prev)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsCertZoomed((prev) => !prev)
+                  }}
                   aria-label={isCertZoomed ? 'Fit to screen' : 'Zoom in certificate'}
                 >
-                  {isCertZoomed ? <ZoomOut size={15} /> : <ZoomIn size={15} />}
+                  {isCertZoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
                   <span>{isCertZoomed ? 'Fit' : 'Zoom'}</span>
                 </button>
 
                 <button
                   type="button"
-                  className="project-modal-close"
-                  onClick={handleCloseCertificate}
+                  className="certificate-modal-close"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleCloseCertificate()
+                  }}
                   aria-label="Close certificate viewer"
                 >
-                  <X size={18} />
+                  <X size={20} color="#ffffff" strokeWidth={2.2} />
                 </button>
               </div>
             </div>
@@ -522,7 +498,10 @@ export default function AchievementsSection() {
                   className={`certificate-display-img ${
                     activeCertificate.rotate ? 'rotated-cert-img' : 'standard-cert-img'
                   } ${isCertZoomed ? 'zoomed' : ''}`}
-                  onClick={() => setIsCertZoomed((prev) => !prev)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsCertZoomed((prev) => !prev)
+                  }}
                   loading="lazy"
                   decoding="async"
                 />
@@ -533,9 +512,9 @@ export default function AchievementsSection() {
             <div className="certificate-modal-footer">
               <span className="certificate-footer-note">{activeCertificate.footerNote}</span>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   )
 }

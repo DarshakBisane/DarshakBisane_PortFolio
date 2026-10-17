@@ -12,16 +12,32 @@
   --text-muted: #71717a;
   --text-darkgrey: #333333;
 
-  /* Liquid Glass Design System */
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.2);
-  --glass-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 16px 40px rgba(0, 0, 0, 0.5);
+  /* Liquid Glass Design System (Issues 7, 9, 13: Enhanced contrast against background particles) */
+  --glass-bg: rgba(10, 10, 12, 0.78);
+  --glass-bg-hover: rgba(16, 16, 20, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-border-hover: rgba(255, 255, 255, 0.22);
+  --glass-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 16px 40px rgba(0, 0, 0, 0.65);
   --glass-radius: 14px;
   --glass-blur: 16px;
 
-  /* Typography */
+  /* Unified Border Radius Scale (Issue 2) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* Unified Typography Scale (Issue 1) */
+  --text-2xs: 0.75rem;    /* 12px - Badges, captions, micro metadata */
+  --text-xs: 0.8125rem;   /* 13px - Chips, small labels, button copy */
+  --text-sm: 0.875rem;    /* 14px - Secondary body, descriptions */
+  --text-base: 1rem;      /* 16px - Standard body */
+  --text-lg: 1.125rem;    /* 18px - Subheadings, card titles */
+  --text-xl: 1.5rem;      /* 24px - Large section subheads */
+  --text-2xl: clamp(1.75rem, 3.2vw, 2.5rem); /* Editorial section headings */
+
+  /* Typography Font Families */
   --font-editorial: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;

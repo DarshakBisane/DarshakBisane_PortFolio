@@ -1,5 +1,6 @@
 import { ArrowUpRight, ChevronDown, ChevronUp, ExternalLink, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Modal from '../Modal'
 import { GithubIcon } from '../icons/SocialIcons'
 import {
   LaxmanRekhaPreview,
@@ -241,27 +242,6 @@ export default function ProjectsSection() {
   const [showMore, setShowMore] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
 
-  // Listen for Escape key to close modal
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setSelectedProject(null)
-      }
-    }
-
-    if (selectedProject) {
-      document.body.style.overflow = 'hidden'
-      window.addEventListener('keydown', handleKeyDown)
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [selectedProject])
-
   const visibleProjects = showMore
     ? PROJECTS_DATA
     : PROJECTS_DATA.filter((p) => p.isFeatured)
@@ -372,20 +352,29 @@ export default function ProjectsSection() {
         })}
       </div>
 
-      {/* Detailed Project Modal */}
-      {selectedProject && (
-        <div
-          className="project-modal-backdrop"
-          onClick={() => setSelectedProject(null)}
-          role="presentation"
+      {/* Projects Footer Toggle (Issue 15: Natural continuation action at bottom of projects list) */}
+      <div className="projects-footer-action">
+        <button
+          type="button"
+          className="projects-toggle-btn"
+          onClick={() => setShowMore((prev) => !prev)}
+          aria-expanded={showMore}
+          aria-controls="projects-grid"
         >
-          <div
-            className="project-modal-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-project-title"
-          >
+          <span>{showMore ? 'Show Less Projects' : 'More Projects'}</span>
+          {showMore ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+        </button>
+      </div>
+
+      {/* Detailed Project Modal — Standardized Full-Screen Pure Black Modal */}
+      <Modal
+        isOpen={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        titleId="modal-project-title"
+        className="project-modal-dialog"
+      >
+        {selectedProject && (
+          <>
             {/* Modal Header */}
             <div className="project-modal-header">
               <div>
@@ -400,7 +389,7 @@ export default function ProjectsSection() {
                 onClick={() => setSelectedProject(null)}
                 aria-label="Close details dialog"
               >
-                <X size={18} />
+                <X size={20} color="#ffffff" strokeWidth={2.2} />
               </button>
             </div>
 
@@ -493,9 +482,9 @@ export default function ProjectsSection() {
                 Close
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   )
 }

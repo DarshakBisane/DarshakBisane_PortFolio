@@ -9,7 +9,8 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Modal from '../Modal'
 import certificateImg from '../../assets/Internship1.webp'
 import './sections.css'
 
@@ -44,29 +45,6 @@ export default function ExperienceSection() {
     setShowCertificate(false)
     setIsZoomed(false)
   }
-
-  // Manage modal accessibility and Escape key listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setSelectedDescription(null)
-        setShowCertificate(false)
-        setIsZoomed(false)
-      }
-    }
-
-    if (selectedDescription || showCertificate) {
-      document.body.style.overflow = 'hidden'
-      window.addEventListener('keydown', handleKeyDown)
-    } else {
-      document.body.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [selectedDescription, showCertificate])
 
   return (
     <div className="section-wrapper animate-content" style={{ width: '100%' }}>
@@ -138,20 +116,15 @@ export default function ExperienceSection() {
         </div>
       </div>
 
-      {/* Description Modal */}
-      {selectedDescription && (
-        <div
-          className="project-modal-backdrop"
-          onClick={() => setSelectedDescription(null)}
-          role="presentation"
-        >
-          <div
-            className="project-modal-dialog experience-description-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="exp-modal-title"
-          >
+      {/* Description Modal — Standardized Full-Screen Pure Black Modal */}
+      <Modal
+        isOpen={!!selectedDescription}
+        onClose={() => setSelectedDescription(null)}
+        titleId="exp-modal-title"
+        className="project-modal-dialog experience-description-dialog"
+      >
+        {selectedDescription && (
+          <>
             {/* Modal Header */}
             <div className="project-modal-header">
               <div>
@@ -172,7 +145,7 @@ export default function ExperienceSection() {
                 onClick={() => setSelectedDescription(null)}
                 aria-label="Close description dialog"
               >
-                <X size={18} />
+                <X size={20} color="#ffffff" strokeWidth={2.2} />
               </button>
             </div>
 
@@ -230,83 +203,88 @@ export default function ExperienceSection() {
                 </a>
               </div>
             </div>
+          </>
+        )}
+      </Modal>
+
+      {/* Certificate Viewer Modal — Standardized Full-Screen Pure Black Modal */}
+      <Modal
+        isOpen={showCertificate}
+        onClose={handleCloseCertificate}
+        titleId="cert-modal-title"
+        backdropClassName="certificate-viewer-backdrop"
+        className="certificate-modal-dialog"
+        closeOnBackdropClick={true}
+      >
+        {/* Modal Header */}
+        <div className="certificate-modal-header">
+          <div>
+            <span className="project-modal-kicker">Verified Credential</span>
+            <h3 id="cert-modal-title" className="certificate-modal-title">
+              Certificate of Internship
+            </h3>
+            <p className="certificate-modal-subtitle">
+              Veedev Software Pvt. Ltd. · Tumsar, Maharashtra
+            </p>
+          </div>
+
+          <div className="certificate-controls">
+            <button
+              type="button"
+              className={`certificate-zoom-btn ${isZoomed ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsZoomed((prev) => !prev)
+              }}
+              aria-label={isZoomed ? 'Fit to screen' : 'Zoom in certificate'}
+            >
+              {isZoomed ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
+              <span>{isZoomed ? 'Fit' : 'Zoom'}</span>
+            </button>
+
+            <button
+              type="button"
+              className="certificate-modal-close"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCloseCertificate()
+              }}
+              aria-label="Close certificate viewer"
+            >
+              <X size={20} color="#ffffff" strokeWidth={2.2} />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Certificate Viewer Modal */}
-      {showCertificate && (
-        <div
-          className="project-modal-backdrop certificate-viewer-backdrop"
-          onClick={handleCloseCertificate}
-          role="presentation"
-        >
+        {/* Rotated Certificate Viewport */}
+        <div className={`certificate-stage-wrapper ${isZoomed ? 'zoomed-stage' : ''}`}>
           <div
-            className="certificate-modal-dialog"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cert-modal-title"
+            className="certificate-aspect-frame is-rotated-cert"
+            style={{ aspectRatio: '1280 / 905' }}
           >
-            {/* Modal Header */}
-            <div className="certificate-modal-header">
-              <div>
-                <span className="project-modal-kicker">Verified Credential</span>
-                <h3 id="cert-modal-title" className="certificate-modal-title">
-                  Certificate of Internship
-                </h3>
-                <p className="certificate-modal-subtitle">
-                  Veedev Software Pvt. Ltd. · Tumsar, Maharashtra
-                </p>
-              </div>
-
-              <div className="certificate-controls">
-                <button
-                  type="button"
-                  className={`certificate-zoom-btn ${isZoomed ? 'active' : ''}`}
-                  onClick={() => setIsZoomed((prev) => !prev)}
-                  aria-label={isZoomed ? 'Fit to screen' : 'Zoom in certificate'}
-                >
-                  {isZoomed ? <ZoomOut size={15} /> : <ZoomIn size={15} />}
-                  <span>{isZoomed ? 'Fit' : 'Zoom'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="project-modal-close"
-                  onClick={handleCloseCertificate}
-                  aria-label="Close certificate viewer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Rotated Certificate Viewport */}
-            <div className={`certificate-stage-wrapper ${isZoomed ? 'zoomed-stage' : ''}`}>
-              <div className="certificate-aspect-frame">
-                <img
-                  src={certificateImg}
-                  alt="Veedev Enterprises Web Development Internship Certificate - Darshak K. Bisane"
-                  className={`certificate-rotated-img ${isZoomed ? 'zoomed' : ''}`}
-                  onClick={() => setIsZoomed((prev) => !prev)}
-                  loading="lazy"
-                  decoding="async"
-                  width={905}
-                  height={1280}
-                />
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="certificate-modal-footer">
-              <span className="certificate-footer-note">
-                Completed Industrial Training in Website Design & Development using PHP · Issue Date: 15-07-2024
-              </span>
-            </div>
+            <img
+              src={certificateImg}
+              alt="Veedev Enterprises Web Development Internship Certificate - Darshak K. Bisane"
+              className={`certificate-rotated-img ${isZoomed ? 'zoomed' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsZoomed((prev) => !prev)
+              }}
+              loading="lazy"
+              decoding="async"
+              width={905}
+              height={1280}
+            />
           </div>
         </div>
-      )}
+
+        {/* Modal Footer */}
+        <div className="certificate-modal-footer">
+          <span className="certificate-footer-note">
+            Completed Industrial Training in Website Design & Development using PHP · Issue Date: 15-07-2024
+          </span>
+        </div>
+      </Modal>
     </div>
   )
 }

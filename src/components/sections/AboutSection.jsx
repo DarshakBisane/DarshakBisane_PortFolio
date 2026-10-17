@@ -44,11 +44,13 @@ export default function AboutSection() {
       if (p1WrapperRef.current) {
         p1WrapperRef.current.style.transform = `translate3d(${-progress * travelDistanceP1}px, 0, 0)`
         p1WrapperRef.current.style.opacity = `${Math.max(1 - progress * 1.3, 0)}`
+        p1WrapperRef.current.style.visibility = progress >= 0.95 ? 'hidden' : 'visible'
       }
 
       if (p2WrapperRef.current) {
         p2WrapperRef.current.style.transform = `translate3d(${progress * travelDistanceP2}px, 0, 0)`
         p2WrapperRef.current.style.opacity = `${Math.max(1 - progress * 1.3, 0)}`
+        p2WrapperRef.current.style.visibility = progress >= 0.95 ? 'hidden' : 'visible'
       }
 
       if (headingRef.current) {
