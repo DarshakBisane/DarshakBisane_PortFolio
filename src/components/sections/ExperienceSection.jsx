@@ -10,7 +10,7 @@ import {
   ZoomOut,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import certificateImg from '../../assets/Internship1.jpeg'
+import certificateImg from '../../assets/Internship1.webp'
 import './sections.css'
 
 // Single verified experience entry as required
@@ -23,7 +23,7 @@ const EXPERIENCES_DATA = [
     duration: 'Jan 2024 – May 2024 · 5 months',
     location: 'Tumsar, Maharashtra, India',
     linkedinUrl:
-      'https://www.linkedin.com/in/darshak-bisane-181a71339/edit/forms/position/2674976461/',
+      'https://www.linkedin.com/in/darshak-bisane-181a71339/details/experience/',
     description: {
       overview:
         'During my internship at Veedev Enterprises, Tumsar, I developed a College Management Website using HTML, CSS, JavaScript, and PHP. I learned how to structure and style web pages, add JavaScript functionality, use PHP for server-side development, and work with a local database to store application data.',
@@ -290,6 +290,10 @@ export default function ExperienceSection() {
                   alt="Veedev Enterprises Web Development Internship Certificate - Darshak K. Bisane"
                   className={`certificate-rotated-img ${isZoomed ? 'zoomed' : ''}`}
                   onClick={() => setIsZoomed((prev) => !prev)}
+                  loading="lazy"
+                  decoding="async"
+                  width={905}
+                  height={1280}
                 />
               </div>
             </div>

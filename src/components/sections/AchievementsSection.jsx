@@ -11,8 +11,8 @@ import {
   ZoomOut,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import kdkCertImg from '../../assets/KDK hackathon.jpg'
-import priyadarshiniCertImg from '../../assets/Priyadarshini Hackathon.jpg'
+import kdkCertImg from '../../assets/KDK hackathon.webp'
+import priyadarshiniCertImg from '../../assets/Priyadarshini Hackathon.webp'
 import './sections.css'
 
 const ACHIEVEMENTS_DATA = [
@@ -523,6 +523,8 @@ export default function AchievementsSection() {
                     activeCertificate.rotate ? 'rotated-cert-img' : 'standard-cert-img'
                   } ${isCertZoomed ? 'zoomed' : ''}`}
                   onClick={() => setIsCertZoomed((prev) => !prev)}
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             </div>

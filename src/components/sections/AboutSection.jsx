@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
-import mePhoto from '../../assets/Me.jpeg'
+import mePhoto from '../../assets/Me.webp'
+import mePhoto250 from '../../assets/Me-250.webp'
+import mePhoto600 from '../../assets/Me-600.webp'
 import './sections.css'
 
 export default function AboutSection() {
@@ -11,31 +13,40 @@ export default function AboutSection() {
   const rafRef = useRef(null)
 
   useEffect(() => {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReducedMotion) return
+
+    let vh = window.innerHeight || 800
+    let vw = window.innerWidth || 1200
+    let travelDistanceP1 = vw
+    let travelDistanceP2 = vw
+
+    const measureLayout = () => {
+      vh = window.innerHeight || 800
+      vw = window.innerWidth || 1200
+      const p1Width = p1WrapperRef.current ? p1WrapperRef.current.offsetWidth : vw
+      const p2Width = p2WrapperRef.current ? p2WrapperRef.current.offsetWidth : vw
+      travelDistanceP1 = vw / 2 + p1Width / 2 + 100
+      travelDistanceP2 = vw / 2 + p2Width / 2 + 100
+    }
+
     const updateAboutAnimation = () => {
       if (!sectionRef.current) return
 
       const rect = sectionRef.current.getBoundingClientRect()
-      const vh = window.innerHeight || 800
-      const vw = window.innerWidth || 1200
 
-      // Normalized progress when scrolling down from About toward Education (0 to 1)
       // When About is centered/in view, rect.top is ~0. As user scrolls down to Education, rect.top goes from 0 to -vh.
       const progress = Math.min(Math.max(-rect.top / vh, 0), 1)
 
-      // Calculate travel distances dynamically so both paragraphs completely exit opposite edges
-      const p1Width = p1WrapperRef.current ? p1WrapperRef.current.offsetWidth : vw
-      const p2Width = p2WrapperRef.current ? p2WrapperRef.current.offsetWidth : vw
-      const travelDistanceP1 = vw / 2 + p1Width / 2 + 100
-      const travelDistanceP2 = vw / 2 + p2Width / 2 + 100
-
       if (p1WrapperRef.current) {
-        // Paragraph 1 moves progressively toward the LEFT edge (-X)
         p1WrapperRef.current.style.transform = `translate3d(${-progress * travelDistanceP1}px, 0, 0)`
         p1WrapperRef.current.style.opacity = `${Math.max(1 - progress * 1.3, 0)}`
       }
 
       if (p2WrapperRef.current) {
-        // Paragraph 2 moves progressively toward the RIGHT edge (+X)
         p2WrapperRef.current.style.transform = `translate3d(${progress * travelDistanceP2}px, 0, 0)`
         p2WrapperRef.current.style.opacity = `${Math.max(1 - progress * 1.3, 0)}`
       }
@@ -56,13 +67,19 @@ export default function AboutSection() {
       rafRef.current = requestAnimationFrame(updateAboutAnimation)
     }
 
+    const onResize = () => {
+      measureLayout()
+      onScroll()
+    }
+
+    measureLayout()
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
+    window.addEventListener('resize', onResize, { passive: true })
     updateAboutAnimation()
 
     return () => {
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', onResize)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
   }, [])
@@ -79,9 +96,14 @@ export default function AboutSection() {
         <div className="about-profile-image-frame">
           <img
             src={mePhoto}
+            srcSet={`${mePhoto250} 250w, ${mePhoto} 400w, ${mePhoto600} 600w`}
+            sizes="(max-width: 768px) 150px, 195px"
+            width={195}
+            height={195}
             alt="Darshak Bisane"
             className="about-profile-image"
             loading="eager"
+            decoding="async"
           />
         </div>
         <h3 className="about-profile-name">Darshak K. Bisane</h3>

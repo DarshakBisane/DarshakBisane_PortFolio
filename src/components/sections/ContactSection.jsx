@@ -1,45 +1,130 @@
-import { AlertCircle, Check, Loader2, Send } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { AlertCircle, Loader2, Send } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import formSuccessData from '../icons/form success.json'
 import { GithubIcon, LeetcodeIcon, LinkedinIcon } from '../icons/SocialIcons'
 import './sections.css'
 
-export default function ContactSection() {
-  const [formData, setFormData] = useState({ name: '', message: '' })
-  const [status, setStatus] = useState('idle') // 'idle' | 'sending' | 'error' | 'success'
-  const [errorMessage, setErrorMessage] = useState('')
-  const [animationPhase, setAnimationPhase] = useState('idle') // 'idle' | 'collapsing' | 'launching' | 'completed'
+let lottiePromise = null
+function preloadLottie() {
+  if (!lottiePromise) {
+    lottiePromise = import('lottie-web/build/player/lottie_light')
+  }
+  return lottiePromise
+}
 
-  const collapseTimerRef = useRef(null)
-  const completionTimerRef = useRef(null)
+function SuccessAnimation({ onComplete }) {
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    if (prefersReducedMotion) {
+      onComplete?.()
+      return
+    }
+
+    let anim = null
+    let isCancelled = false
+
+    preloadLottie().then((module) => {
+      if (isCancelled || !containerRef.current) return
+      const lottie = module.default || module
+
+      anim = lottie.loadAnimation({
+        container: containerRef.current,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        animationData: formSuccessData,
+      })
+
+      const handleComplete = () => {
+        onComplete?.()
+      }
+
+      anim.addEventListener('complete', handleComplete)
+    })
+
+    return () => {
+      isCancelled = true
+      if (anim) {
+        anim.destroy()
+      }
+    }
+  }, [onComplete])
+
+  return (
+    <div
+      ref={containerRef}
+      className="contact-lottie-container"
+      aria-hidden="true"
+    />
+  )
+}
+
+export default function ContactSection() {
+  // State machine: 'idle' | 'submitting' | 'form-exiting' | 'success-animation' | 'success-message' | 'success-exiting' | 'form-entering'
+  const [formState, setFormState] = useState('idle')
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' })
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const transitionTimerRef = useRef(null)
+  const nameInputRef = useRef(null)
+  const successHeadingRef = useRef(null)
 
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
-      if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current)
-      if (completionTimerRef.current) clearTimeout(completionTimerRef.current)
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current)
     }
   }, [])
+
+  // Accessibility focus management
+  useEffect(() => {
+    if (formState === 'success-message') {
+      successHeadingRef.current?.focus()
+    } else if (formState === 'form-entering') {
+      nameInputRef.current?.focus()
+    }
+  }, [formState])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (formState !== 'idle') return
+
     const trimmedName = formData.name.trim()
+    const trimmedEmail = formData.email.trim()
     const trimmedMessage = formData.message.trim()
 
-    if (!trimmedName || !trimmedMessage) {
-      setErrorMessage('Please fill in both your name and message.')
-      setStatus('error')
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      setErrorMessage('Please fill in your name, email, and message.')
       return
     }
 
-    if (trimmedMessage.length < 5) {
-      setErrorMessage('Please enter a message with at least 5 characters.')
-      setStatus('error')
+    if (trimmedName.length > 100) {
+      setErrorMessage('Please enter a valid name (1–100 characters).')
       return
     }
 
-    setStatus('sending')
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmedEmail) || trimmedEmail.length > 254) {
+      setErrorMessage('Please enter a valid email address.')
+      return
+    }
+
+    if (trimmedMessage.length < 5 || trimmedMessage.length > 5000) {
+      setErrorMessage('Please enter a message between 5 and 5,000 characters.')
+      return
+    }
+
+    setFormState('submitting')
     setErrorMessage('')
+    preloadLottie()
 
     try {
       const response = await fetch('/api/contact', {
@@ -49,6 +134,7 @@ export default function ContactSection() {
         },
         body: JSON.stringify({
           name: trimmedName,
+          email: trimmedEmail,
           message: trimmedMessage,
         }),
       })
@@ -56,54 +142,73 @@ export default function ContactSection() {
       const data = await response.json().catch(() => null)
 
       if (response.ok && data?.success) {
-        // Backend confirmed email delivery acceptance
-        setStatus('success')
+        // Step 2: Form scales out
+        setFormState('form-exiting')
 
-        // Check if user prefers reduced motion
         const prefersReducedMotion =
           typeof window !== 'undefined' &&
           window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-        if (prefersReducedMotion) {
-          setAnimationPhase('completed')
-          return
-        }
+        const exitDuration = prefersReducedMotion ? 50 : 600
 
-        // Phase 1: Form collapses (0 - 0.45s)
-        setAnimationPhase('collapsing')
-
-        // Phase 2: Rocket appears and launches across the right edge (0.45s - 2.25s)
-        collapseTimerRef.current = setTimeout(() => {
-          setAnimationPhase('launching')
-        }, 450)
-
-        // Phase 3: Completion card appears (2.35s - 2.7s total)
-        completionTimerRef.current = setTimeout(() => {
-          setAnimationPhase('completed')
-          setFormData({ name: '', message: '' })
-        }, 2350)
+        transitionTimerRef.current = setTimeout(() => {
+          // Step 3: Play Lottie success animation
+          setFormState('success-animation')
+        }, exitDuration)
       } else {
         // Delivery failed or service unconfigured
-        setStatus('error')
+        setFormState('idle')
         setErrorMessage(
           data?.error ||
-            'Failed to send message. Please try again or connect directly via LinkedIn or GitHub.'
+          'Failed to send message. Please try again or connect directly via LinkedIn or GitHub.'
         )
       }
     } catch {
-      setStatus('error')
+      setFormState('idle')
       setErrorMessage(
         'Network error while reaching the email server. Please check your connection and retry.'
       )
     }
   }
 
+  const handleAnimationComplete = useCallback(() => {
+    // Step 4: Display the success message
+    setFormState('success-message')
+  }, [])
+
   const handleResetForm = () => {
-    setAnimationPhase('idle')
-    setStatus('idle')
-    setErrorMessage('')
-    setFormData({ name: '', message: '' })
+    if (formState !== 'success-message') return
+
+    // Step 5: Reactivate the form
+    setFormState('success-exiting')
+
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const exitDuration = prefersReducedMotion ? 50 : 350
+
+    transitionTimerRef.current = setTimeout(() => {
+      // Clear inputs
+      setFormData({ name: '', email: '', message: '' })
+      setErrorMessage('')
+      setFormState('form-entering')
+
+      const enterDuration = prefersReducedMotion ? 50 : 450
+      transitionTimerRef.current = setTimeout(() => {
+        setFormState('idle')
+      }, enterDuration)
+    }, exitDuration)
   }
+
+  const isFormRendered =
+    formState === 'idle' ||
+    formState === 'submitting' ||
+    formState === 'form-exiting' ||
+    formState === 'form-entering'
+
+  const isSuccessRendered =
+    formState === 'success-message' || formState === 'success-exiting'
 
   return (
     <div className="section-wrapper animate-content" style={{ width: '100%' }}>
@@ -118,37 +223,57 @@ export default function ContactSection() {
       {/* Centered Liquid Glass Contact Stage */}
       <div className="contact-center-container">
         <div className="contact-stage-frame">
-          {/* Phase 3: Completion Confirmation */}
-          {animationPhase === 'completed' ? (
+          {/* Step 3: JSON Animation Playing */}
+          {formState === 'success-animation' && (
+            <div className="contact-lottie-stage" aria-label="Sending confirmation animation">
+              <SuccessAnimation onComplete={handleAnimationComplete} />
+            </div>
+          )}
+
+          {/* Step 4: Success Message Card */}
+          {isSuccessRendered && (
             <div
-              className="liquid-glass-card contact-success-card"
+              className={`liquid-glass-card contact-success-card ${formState === 'success-exiting'
+                  ? 'contact-success-card-exiting'
+                  : 'contact-success-card-entering'
+                }`}
               role="status"
               aria-live="polite"
             >
-              <div className="contact-success-icon-frame">
-                <Check size={22} className="contact-success-check" />
-              </div>
-
-              <h3 className="contact-success-title">Message sent successfully.</h3>
+              <h3
+                className="contact-success-title"
+                tabIndex={-1}
+                ref={successHeadingRef}
+                style={{ outline: 'none' }}
+              >
+                Message Sent Successfully
+              </h3>
 
               <p className="contact-success-desc">
-                Your message has been delivered to Darshak Bisane. Thank you for reaching out.
+                Thank you for reaching out. Your message has been sent successfully.
               </p>
 
               <button
                 type="button"
                 className="contact-new-message-btn"
                 onClick={handleResetForm}
+                disabled={formState === 'success-exiting'}
               >
                 <span>Send Another Message</span>
               </button>
             </div>
-          ) : (
-            /* Interactive Form (or Collapsing Form in Phase 1) */
+          )}
+
+          {/* Steps 1, 2, 5: Interactive Form */}
+          {isFormRendered && (
             <div
-              className={`liquid-glass-card contact-glass-form-card ${
-                animationPhase === 'collapsing' ? 'contact-form-collapsing' : ''
-              }`}
+              className={`liquid-glass-card contact-glass-form-card ${formState === 'form-exiting'
+                  ? 'contact-form-exiting'
+                  : formState === 'form-entering'
+                    ? 'contact-form-entering'
+                    : ''
+                }`}
+              aria-hidden={formState === 'form-exiting'}
             >
               <form onSubmit={handleSubmit} className="contact-form-body" noValidate={false}>
                 {/* Field 1: Name */}
@@ -157,20 +282,42 @@ export default function ContactSection() {
                     Name
                   </label>
                   <input
+                    ref={nameInputRef}
                     id="contact-name"
                     name="name"
                     type="text"
                     required
-                    disabled={status === 'sending' || animationPhase !== 'idle'}
+                    disabled={formState !== 'idle' && formState !== 'form-entering'}
                     placeholder="Your name"
                     value={formData.name}
+                    onFocus={preloadLottie}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     className="contact-input"
                     autoComplete="name"
                   />
                 </div>
 
-                {/* Field 2: Message */}
+                {/* Field 2: Email */}
+                <div className="contact-form-field">
+                  <label htmlFor="contact-email" className="contact-field-label">
+                    Email
+                  </label>
+                  <input
+                    id="contact-email"
+                    name="email"
+                    type="email"
+                    required
+                    disabled={formState !== 'idle' && formState !== 'form-entering'}
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onFocus={preloadLottie}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                    className="contact-input"
+                    autoComplete="email"
+                  />
+                </div>
+
+                {/* Field 3: Message */}
                 <div className="contact-form-field">
                   <label htmlFor="contact-message" className="contact-field-label">
                     Message
@@ -179,10 +326,12 @@ export default function ContactSection() {
                     id="contact-message"
                     name="message"
                     rows={4}
+                    maxLength={5000}
                     required
-                    disabled={status === 'sending' || animationPhase !== 'idle'}
+                    disabled={formState !== 'idle' && formState !== 'form-entering'}
                     placeholder="Write your message..."
                     value={formData.message}
+                    onFocus={preloadLottie}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, message: e.target.value }))
                     }
@@ -191,7 +340,7 @@ export default function ContactSection() {
                 </div>
 
                 {/* Error Banner (if submission failed) */}
-                {status === 'error' && errorMessage && (
+                {errorMessage && (
                   <div className="contact-error-banner" role="alert">
                     <AlertCircle size={15} className="contact-error-icon" />
                     <span className="contact-error-text">{errorMessage}</span>
@@ -201,11 +350,11 @@ export default function ContactSection() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={status === 'sending' || animationPhase !== 'idle'}
-                  className={`contact-submit-btn ${status === 'sending' ? 'is-loading' : ''}`}
-                  aria-label={status === 'sending' ? 'Sending message...' : 'Send Message'}
+                  disabled={formState !== 'idle'}
+                  className={`contact-submit-btn ${formState === 'submitting' ? 'is-loading' : ''}`}
+                  aria-label={formState === 'submitting' ? 'Sending message...' : 'Send Message'}
                 >
-                  {status === 'sending' ? (
+                  {formState === 'submitting' ? (
                     <>
                       <Loader2 size={16} className="contact-spinner" />
                       <span>Sending...</span>
@@ -218,72 +367,6 @@ export default function ContactSection() {
                   )}
                 </button>
               </form>
-            </div>
-          )}
-
-          {/* Phase 2: Rocket Launch Animation */}
-          {animationPhase === 'launching' && (
-            <div className="rocket-launch-stage" aria-hidden="true">
-              <div className="rocket-flight-unit">
-                {/* Smoke Trail & Flame */}
-                <div className="rocket-exhaust-tail">
-                  <span className="smoke-puff p-1" />
-                  <span className="smoke-puff p-2" />
-                  <span className="smoke-puff p-3" />
-                  <span className="smoke-puff p-4" />
-                  <span className="rocket-flame-core" />
-                </div>
-
-                {/* Aerodynamic Monochrome Rocket */}
-                <svg
-                  width="54"
-                  height="26"
-                  viewBox="0 0 54 26"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="rocket-svg-vehicle"
-                >
-                  {/* Thruster Nozzle */}
-                  <path d="M4 10.5L9 11.5V14.5L4 15.5V10.5Z" fill="#a1a1aa" />
-                  <line x1="9" y1="11.5" x2="9" y2="14.5" stroke="#71717a" strokeWidth="1.2" />
-
-                  {/* Fuselage Hull */}
-                  <path
-                    d="M9 13C13 8 27 7 48 13C27 19 13 18 9 13Z"
-                    fill="#ffffff"
-                    stroke="#52525b"
-                    strokeWidth="1"
-                  />
-
-                  {/* Upper Fin */}
-                  <path
-                    d="M15 9L9 4L19 8L15 9Z"
-                    fill="#e4e4e7"
-                    stroke="#71717a"
-                    strokeWidth="0.75"
-                  />
-
-                  {/* Lower Fin */}
-                  <path
-                    d="M15 17L9 22L19 18L15 17Z"
-                    fill="#e4e4e7"
-                    stroke="#71717a"
-                    strokeWidth="0.75"
-                  />
-
-                  {/* Cockpit Porthole */}
-                  <circle cx="33" cy="13" r="2.6" fill="#09090b" stroke="#e4e4e7" strokeWidth="1" />
-                  <circle cx="33.8" cy="12.2" r="0.8" fill="#ffffff" />
-
-                  {/* Panel Line */}
-                  <path
-                    d="M22 10.5C24 12 24 14 22 15.5"
-                    stroke="#71717a"
-                    strokeWidth="0.75"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
             </div>
           )}
         </div>

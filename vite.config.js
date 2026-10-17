@@ -30,8 +30,21 @@ function contactDevApiPlugin(apiKey) {
 
         req.on('end', async () => {
           try {
-            const body = JSON.parse(bodyRaw || '{}')
+            let body
+            try {
+              body = JSON.parse(bodyRaw || '{}')
+            } catch {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              return res.end(
+                JSON.stringify({
+                  success: false,
+                  error: 'Invalid JSON request payload.',
+                })
+              )
+            }
             const name = typeof body.name === 'string' ? body.name.trim() : ''
+            const email = typeof body.email === 'string' ? body.email.trim() : ''
             const message = typeof body.message === 'string' ? body.message.trim() : ''
 
             if (!name || name.length < 1 || name.length > 100) {
@@ -41,6 +54,18 @@ function contactDevApiPlugin(apiKey) {
                 JSON.stringify({
                   success: false,
                   error: 'Please enter a valid name (1–100 characters).',
+                })
+              )
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!email || email.length > 254 || !emailRegex.test(email)) {
+              res.statusCode = 400
+              res.setHeader('Content-Type', 'application/json')
+              return res.end(
+                JSON.stringify({
+                  success: false,
+                  error: 'Please enter a valid email address.',
                 })
               )
             }
@@ -56,7 +81,15 @@ function contactDevApiPlugin(apiKey) {
               )
             }
 
-            const resendApiKey = apiKey || process.env.RESEND_API_KEY
+            const rawApiKey =
+              process.env.RESEND_API_KEY ||
+              apiKey ||
+              loadEnv('development', process.cwd(), '').RESEND_API_KEY
+            const resendApiKey =
+              typeof rawApiKey === 'string'
+                ? rawApiKey.trim().replace(/^["'](.*)["']$/, '$1')
+                : ''
+
             if (!resendApiKey) {
               res.statusCode = 503
               res.setHeader('Content-Type', 'application/json')
@@ -79,8 +112,9 @@ function contactDevApiPlugin(apiKey) {
             const payload = {
               from: 'Portfolio Contact <onboarding@resend.dev>',
               to: ['darshak123321@gmail.com'],
-              subject: 'New Portfolio Contact Message',
-              text: `New Portfolio Message from ${name}\n\nTime: ${formattedDate} (${timestamp})\n\nMessage:\n${message}`,
+              reply_to: email,
+              subject: `New Portfolio Message from ${name}`,
+              text: `New Portfolio Message from ${name}\nEmail: ${email}\n\nTime: ${formattedDate} (${timestamp})\n\nMessage:\n${message}`,
               html: `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 8px;">
                   <h2 style="margin-top: 0; font-size: 20px; color: #000; border-bottom: 1px solid #eaeaea; padding-bottom: 12px;">
@@ -90,6 +124,10 @@ function contactDevApiPlugin(apiKey) {
                     <tr>
                       <td style="padding: 6px 0; color: #666; width: 80px; font-weight: 500;">From:</td>
                       <td style="padding: 6px 0; color: #111; font-weight: 600;">${escapeHtml(name)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 0; color: #666; font-weight: 500;">Email:</td>
+                      <td style="padding: 6px 0; color: #111;"><a href="mailto:${escapeHtml(email)}" style="color: #0066cc; text-decoration: none;">${escapeHtml(email)}</a></td>
                     </tr>
                     <tr>
                       <td style="padding: 6px 0; color: #666; font-weight: 500;">Time:</td>
@@ -102,7 +140,7 @@ function contactDevApiPlugin(apiKey) {
                     </p>
                   </div>
                   <p style="margin-top: 24px; font-size: 12px; color: #888; border-top: 1px solid #f0f0f0; padding-top: 12px;">
-                    Delivered securely to darshak123321@gmail.com via Portfolio Contact Service
+                    Delivered securely to darshak123321@gmail.com via Portfolio Contact Service · Direct reply goes to ${escapeHtml(email)}
                   </p>
                 </div>
               `,
@@ -161,11 +199,36 @@ function contactDevApiPlugin(apiKey) {
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  if (env.RESEND_API_KEY) {
+    process.env.RESEND_API_KEY = env.RESEND_API_KEY
+  }
+  if (env.UPSTASH_REDIS_REST_URL) {
+    process.env.UPSTASH_REDIS_REST_URL = env.UPSTASH_REDIS_REST_URL
+  }
+  if (env.UPSTASH_REDIS_REST_TOKEN) {
+    process.env.UPSTASH_REDIS_REST_TOKEN = env.UPSTASH_REDIS_REST_TOKEN
+  }
   return {
     plugins: [react(), contactDevApiPlugin(env.RESEND_API_KEY)],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'vendor-react'
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons'
+              }
+            }
+          },
+        },
       },
     },
   }

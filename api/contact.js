@@ -1,16 +1,22 @@
 // Serverless endpoint for Vercel / Node environments
 // Delivers contact messages directly to darshak123321@gmail.com via Resend
 
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000 // 10 minutes
-const MAX_REQUESTS_PER_WINDOW = 5
-const ipRequestCounts = new Map()
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-function isRateLimited(ip) {
+const RATE_LIMIT_WINDOW_SECONDS = 10 * 60 // 10 minutes
+const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_SECONDS * 1000
+const MAX_REQUESTS_PER_WINDOW = 5
+
+// In-memory fallback for local development or when Upstash Redis is not configured
+const inMemoryCounts = new Map()
+
+function isInMemoryRateLimited(ip) {
   const now = Date.now()
-  const record = ipRequestCounts.get(ip)
+  const record = inMemoryCounts.get(ip)
 
   if (!record || now > record.resetTime) {
-    ipRequestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
+    inMemoryCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
     return false
   }
 
@@ -20,6 +26,92 @@ function isRateLimited(ip) {
 
   record.count += 1
   return false
+}
+
+// Upstash Redis distributed rate limiter
+let upstashLimiter = null
+let hasLoggedUpstashNotice = false
+
+function getUpstashLimiter() {
+  if (upstashLimiter) return upstashLimiter
+
+  const rawUrl = process.env.UPSTASH_REDIS_REST_URL
+  const rawToken = process.env.UPSTASH_REDIS_REST_TOKEN
+  const url = typeof rawUrl === 'string' ? rawUrl.trim().replace(/^["'](.*)["']$/, '$1') : ''
+  const token = typeof rawToken === 'string' ? rawToken.trim().replace(/^["'](.*)["']$/, '$1') : ''
+
+  if (url && token) {
+    try {
+      const redis = new Redis({ url, token })
+      upstashLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(MAX_REQUESTS_PER_WINDOW, `${RATE_LIMIT_WINDOW_SECONDS} s`),
+        analytics: false,
+        prefix: 'portfolio:contact',
+      })
+      return upstashLimiter
+    } catch (err) {
+      console.warn('[Contact API] Failed to initialize Upstash Redis rate limiter:', err.message)
+    }
+  } else if (!hasLoggedUpstashNotice) {
+    hasLoggedUpstashNotice = true
+    console.warn(
+      '[Contact API] UPSTASH_REDIS_REST_URL/TOKEN environment variables are not configured. Falling back to in-memory rate limiting. Note: Serverless instances do not share memory across lambdas; configure Upstash Redis for distributed rate limiting in production.'
+    )
+  }
+
+  return null
+}
+
+async function checkRateLimit(ip) {
+  const limiter = getUpstashLimiter()
+  if (limiter) {
+    try {
+      const result = await limiter.limit(ip)
+      return !result.success
+    } catch (err) {
+      console.warn('[Contact API] Upstash rate limit check failed, falling back to in-memory:', err.message)
+      return isInMemoryRateLimited(ip)
+    }
+  }
+
+  return isInMemoryRateLimited(ip)
+}
+
+function getClientIp(req) {
+  // 1. Vercel edge sets 'x-real-ip' to the authentic client IP (cannot be spoofed by client)
+  const xRealIp = req.headers['x-real-ip']
+  if (typeof xRealIp === 'string' && xRealIp.trim()) {
+    return xRealIp.trim()
+  }
+
+  // 2. Cloudflare connecting IP (if custom domain uses Cloudflare proxy)
+  const cfConnectingIp = req.headers['cf-connecting-ip']
+  if (typeof cfConnectingIp === 'string' && cfConnectingIp.trim()) {
+    return cfConnectingIp.trim()
+  }
+
+  // 3. Vercel-specific forwarded-for
+  const vercelForwarded = req.headers['x-vercel-forwarded-for']
+  if (typeof vercelForwarded === 'string' && vercelForwarded.trim()) {
+    const parts = vercelForwarded.split(',').map((p) => p.trim()).filter(Boolean)
+    if (parts.length > 0) {
+      return parts[parts.length - 1]
+    }
+  }
+
+  // 4. Standard X-Forwarded-For: use the rightmost entry added by the nearest trusted proxy hop
+  // (client can prepend arbitrary IPs to the left)
+  const forwarded = req.headers['x-forwarded-for']
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    const parts = forwarded.split(',').map((p) => p.trim()).filter(Boolean)
+    if (parts.length > 0) {
+      return parts[parts.length - 1]
+    }
+  }
+
+  // 5. Socket remote address for direct Node connections
+  return req.socket?.remoteAddress || req.connection?.remoteAddress || '127.0.0.1'
 }
 
 function escapeHtml(str) {
@@ -39,20 +131,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    const clientIp =
-      req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-      req.socket?.remoteAddress ||
-      'unknown-ip'
+    // Attempt to load .env in local Node environments if available
+    if (typeof process.loadEnvFile === 'function') {
+      try {
+        process.loadEnvFile()
+      } catch {
+        // Fallback gracefully if .env file is not present on disk
+      }
+    }
 
-    if (isRateLimited(clientIp)) {
+    const clientIp = getClientIp(req)
+    if (await checkRateLimit(clientIp)) {
       return res.status(429).json({
         success: false,
         error: 'Too many requests. Please wait a few minutes before trying again.',
       })
     }
 
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {}
+    // Parse and validate JSON request body explicitly
+    let body
+    try {
+      body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid JSON request payload.',
+        })
+      }
+    } catch {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid JSON request payload.',
+      })
+    }
+
     const name = typeof body.name === 'string' ? body.name.trim() : ''
+    const email = typeof body.email === 'string' ? body.email.trim() : ''
     const message = typeof body.message === 'string' ? body.message.trim() : ''
 
     // Validation
@@ -63,6 +177,14 @@ export default async function handler(req, res) {
       })
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || email.length > 254 || !emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid email address.',
+      })
+    }
+
     if (!message || message.length < 5 || message.length > 5000) {
       return res.status(400).json({
         success: false,
@@ -70,13 +192,18 @@ export default async function handler(req, res) {
       })
     }
 
-    const resendApiKey = process.env.RESEND_API_KEY
+    const rawApiKey = process.env.RESEND_API_KEY
+    const resendApiKey =
+      typeof rawApiKey === 'string'
+        ? rawApiKey.trim().replace(/^["'](.*)["']$/, '$1')
+        : ''
+
     if (!resendApiKey) {
       console.warn('[Contact API] RESEND_API_KEY environment variable is not configured.')
       return res.status(503).json({
         success: false,
         error:
-          'Email delivery is currently unconfigured on the server. Please set RESEND_API_KEY in your environment variables.',
+          'Email service is not configured. Please set RESEND_API_KEY in your environment to enable real delivery to darshak123321@gmail.com.',
       })
     }
 
@@ -90,8 +217,9 @@ export default async function handler(req, res) {
     const payload = {
       from: 'Portfolio Contact <onboarding@resend.dev>',
       to: ['darshak123321@gmail.com'],
-      subject: 'New Portfolio Contact Message',
-      text: `New Portfolio Message from ${name}\n\nTime: ${formattedDate} (${timestamp})\n\nMessage:\n${message}`,
+      reply_to: email,
+      subject: `New Portfolio Message from ${name}`,
+      text: `New Portfolio Message from ${name}\nEmail: ${email}\n\nTime: ${formattedDate} (${timestamp})\n\nMessage:\n${message}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 8px;">
           <h2 style="margin-top: 0; font-size: 20px; color: #000; border-bottom: 1px solid #eaeaea; padding-bottom: 12px;">
@@ -101,6 +229,10 @@ export default async function handler(req, res) {
             <tr>
               <td style="padding: 6px 0; color: #666; width: 80px; font-weight: 500;">From:</td>
               <td style="padding: 6px 0; color: #111; font-weight: 600;">${escapeHtml(name)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666; font-weight: 500;">Email:</td>
+              <td style="padding: 6px 0; color: #111;"><a href="mailto:${escapeHtml(email)}" style="color: #0066cc; text-decoration: none;">${escapeHtml(email)}</a></td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #666; font-weight: 500;">Time:</td>
@@ -113,7 +245,7 @@ export default async function handler(req, res) {
             </p>
           </div>
           <p style="margin-top: 24px; font-size: 12px; color: #888; border-top: 1px solid #f0f0f0; padding-top: 12px;">
-            Delivered securely to darshak123321@gmail.com via Portfolio Contact Service
+            Delivered securely to darshak123321@gmail.com via Portfolio Contact Service · Direct reply goes to ${escapeHtml(email)}
           </p>
         </div>
       `,
@@ -133,7 +265,8 @@ export default async function handler(req, res) {
       console.error('[Contact API] Resend API error response:', response.status, errText)
       return res.status(502).json({
         success: false,
-        error: 'The email provider rejected the delivery request. Please check API key permissions.',
+        error:
+          'Email service rejected delivery request. Please verify RESEND_API_KEY permissions.',
       })
     }
 
